@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>英雄查询系统</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .hero-container {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            max-width: 500px;
+        }
+        .hero-img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+        }
+        .hero-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <h1>英雄查询</h1>
+    <div>
+        英雄名称: <input type="text" id="heroInput">
+        <button id="search">查询</button>
+    </div>
+
+    <div id="results" class="hero-container">
+        <!-- 结果将在这里显示 -->
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // 点击查询按钮或按回车键触发搜索
+            $('#search').click(searchHeroes);
+            $('#heroInput').keypress(function(e) {
+                if(e.which == 13) { // 回车键
+                    searchHeroes();
+                }
+            });
+        });
+
+        function searchHeroes() {
+            const heroName = $('#heroInput').val().trim();
+
+            if(!heroName) {
+                alert('请输入英雄名称');
+                return;
+            }
+
+            $.ajax({
+                type: "GET",
+                url: "http://127.0.0.1:5000/hero_img_get",  // 注意端口改为5000
+                dataType: "json",
+                data: {
+                    name: heroName  // 参数名改为后端期望的'name'
+                },
+                success: function(response) {
+                    displayResults(response.data);
+                },
+                error: function(xhr, status, error) {
+                    $('#results').html(`<p style="color:red">查询失败: ${xhr.responseJSON?.message || error}</p>`);
+                }
+            });
+        }
+
+        function displayResults(heroes) {
+            const $results = $('#results');
+
+            if(!heroes || heroes.length === 0) {
+                $results.html('<p>没有找到匹配的英雄</p>');
+                return;
+            }
+
+            let html = '<h3>查询结果：</h3>';
+
+            heroes.forEach(hero => {
+                html += `
+                <div class="hero-item">
+                    <h4>${hero.hero_name}</h4>
+                    <img class="hero-img" src="${hero.hero_img_url}" alt="${hero.hero_name}"
+                         onerror="this.src='https://via.placeholder.com/300x400?text=图片加载失败'">
+                    <p>ID: ${hero.hero_id}</p>
+                </div>`;
+            });
+
+            $results.html(html);
+        }
+    </script>
+</body>
+</html>
